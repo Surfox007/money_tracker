@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'theme/theme_provider.dart';
-import 'screens/home_screen.dart'; // This is the one you want to use
 import 'services/hive_service.dart';
-import 'models/query_model.dart';
 import 'providers/query_provider.dart';
-import "screens/add_query_screen.dart";
+import 'theme/app_theme.dart';
+import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await HiveService.initHive(); // ✅ Init Hive before runApp
-  final box = HiveService.queryBox;
-
+  await HiveService.initHive();
+  
   runApp(
     MultiProvider(
-      // Use MultiProvider
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => QueryProvider()), // Add this
+        ChangeNotifierProvider(create: (_) => QueryProvider()),
       ],
       child: const MyApp(),
     ),
@@ -29,23 +24,66 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return MaterialApp(
-      title: 'Student Expense Tracker',
+      title: 'Money Tracker',
       debugShowCheckedModeBanner: false,
-      themeMode: themeProvider.themeMode,
       theme: ThemeData(
-        brightness: Brightness.light,
-        primarySwatch: Colors.blue,
         useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
         brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
+        scaffoldBackgroundColor: AppTheme.darkBackground,
+        colorScheme: const ColorScheme.dark(
+          primary: AppTheme.primary,
+          secondary: AppTheme.secondary,
+          error: AppTheme.error,
+          background: AppTheme.darkBackground,
+          surface: AppTheme.darkSurface,
+        ),
+        appBarTheme: AppTheme.appBarTheme,
+        cardTheme: CardTheme(
+          color: AppTheme.darkCard,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppTheme.darkSurface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: AppTheme.elevatedButtonStyle,
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: AppTheme.textButtonStyle,
+        ),
+        bottomNavigationBarTheme: AppTheme.bottomNavigationBarTheme,
+        floatingActionButtonTheme: AppTheme.floatingActionButtonTheme,
+        listTileTheme: AppTheme.listTileTheme,
+        dividerTheme: const DividerThemeData(
+          color: AppTheme.darkDivider,
+          thickness: 1,
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: AppTheme.darkTextPrimary),
+          bodyMedium: TextStyle(color: AppTheme.darkTextPrimary),
+          titleLarge: TextStyle(color: AppTheme.darkTextPrimary),
+          titleMedium: TextStyle(color: AppTheme.darkTextPrimary),
+        ),
       ),
-      home: const HomeScreen(), // ✅ This now refers to the imported one
+      home: const HomeScreen(),
     );
   }
 }

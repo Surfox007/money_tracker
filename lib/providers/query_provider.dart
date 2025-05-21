@@ -1,47 +1,57 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/query_model.dart';
 import '../services/hive_service.dart';
 
 class QueryProvider with ChangeNotifier {
-  List<QueryModel> _queries = [];
+  final Box<QueryModel> _box = HiveService.queryBox;
 
-  List<QueryModel> get queries => _queries;
+  List<QueryModel> get queries => _box.values.where((query) => !query.isDeleted).toList();
+  
+  List<QueryModel> get deletedQueries => _box.values.where((query) => query.isDeleted).toList();
 
   QueryProvider() {
     _loadQueries();
   }
 
   Future<void> _loadQueries() async {
-    final box = HiveService.queryBox;
-    _queries = box.values.toList(); // Load all values from Hive
+    await _box.values.toList(); // Load all values from Hive
     notifyListeners();
   }
 
-  Future<void> addQuery(QueryModel query) async {
-    final box = HiveService.queryBox;
-    await box.add(query); // Add to Hive
-    _queries.add(query);
+  void addQuery(QueryModel query) {
+    _box.add(query);
     notifyListeners();
   }
 
-    Future<void> updateQuery(QueryModel oldQuery, QueryModel newQuery) async {
-    final box = HiveService.queryBox;
-    final index = _queries.indexOf(oldQuery);
+  void updateQuery(QueryModel oldQuery, QueryModel newQuery) {
+    final index = _box.values.toList().indexOf(oldQuery);
     if (index != -1) {
-      final key = oldQuery.key; // Access the Hive key from the HiveObject
-      await box.put(key, newQuery);
-      _queries[index] = newQuery;
+      _box.putAt(index, newQuery);
       notifyListeners();
     }
   }
 
-  Future<void> deleteQuery(QueryModel queryToDelete) async {
-    final box = HiveService.queryBox;
-    final index = _queries.indexOf(queryToDelete);
+  void deleteQuery(QueryModel query) {
+    final index = _box.values.toList().indexOf(query);
     if (index != -1) {
-      await queryToDelete.delete(); // Use the delete() method from HiveObject
-      _queries.removeAt(index);
+      query.isDeleted = true;
+      _box.putAt(index, query);
       notifyListeners();
     }
+  }
+
+  void restoreQuery(QueryModel query) {
+    final index = _box.values.toList().indexOf(query);
+    if (index != -1) {
+      query.isDeleted = false;
+      _box.putAt(index, query);
+      notifyListeners();
+    }
+  }
+
+  void permanentlyDeleteQuery(QueryModel query) {
+    query.delete();
+    notifyListeners();
   }
 }

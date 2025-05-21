@@ -16,10 +16,14 @@ class QueryModel extends HiveObject {
   @HiveField(3)
   DateTime createdAt;
 
+  @HiveField(4)
+  bool isDeleted;
+
   QueryModel({
     required this.title,
     required this.amount,
     required this.type,
     required this.createdAt,
+    this.isDeleted = false,
   });
 }

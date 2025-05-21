@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/query_provider.dart';
 import '../models/query_model.dart';
+import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 
 class HistoryScreen extends StatelessWidget {
@@ -11,179 +12,159 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('History & Dashboard'),
+        title: const Text('Deleted Transactions'),
       ),
       body: Consumer<QueryProvider>(
         builder: (context, queryProvider, child) {
-          final queries = queryProvider.queries;
-          
-          // Calculate dashboard statistics
-          double totalExpense = 0;
-          double totalLent = 0;
-          double totalBorrowed = 0;
+          final deletedQueries = queryProvider.deletedQueries;
 
-          for (var query in queries) {
-            switch (query.type) {
-              case 'Expense':
-                totalExpense += query.amount;
-                break;
-              case 'Lent Money':
-                totalLent += query.amount;
-                break;
-              case 'Borrowed Money':
-                totalBorrowed += query.amount;
-                break;
-            }
+          if (deletedQueries.isEmpty) {
+            return const Center(
+              child: Text(
+                'No deleted transactions',
+                style: TextStyle(
+                  color: AppTheme.darkTextSecondary,
+                  fontSize: 16,
+                ),
+              ),
+            );
           }
 
-          return Column(
-            children: [
-              // Dashboard Section
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: Colors.blue[50],
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Dashboard',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: deletedQueries.length,
+            itemBuilder: (context, index) {
+              final query = deletedQueries[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: _getTypeColor(query.type),
+                    child: Icon(
+                      _getTypeIcon(query.type),
+                      color: Colors.white,
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        _buildDashboardCard(
-                          'Total Expenses',
-                          totalExpense,
-                          Colors.red,
-                          Icons.money_off,
-                        ),
-                        const SizedBox(width: 16),
-                        _buildDashboardCard(
-                          'Money Lent',
-                          totalLent,
-                          Colors.green,
-                          Icons.arrow_upward,
-                        ),
-                        const SizedBox(width: 16),
-                        _buildDashboardCard(
-                          'Money Borrowed',
-                          totalBorrowed,
-                          Colors.orange,
-                          Icons.arrow_downward,
-                        ),
-                      ],
+                  ),
+                  title: Text(
+                    query.title,
+                    style: const TextStyle(
+                      color: AppTheme.darkTextPrimary,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
-                ),
-              ),
-
-              // History Section
-              Expanded(
-                child: ListView.builder(
-                  itemCount: queries.length,
-                  itemBuilder: (context, index) {
-                    final query = queries[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: _getTypeColor(query.type),
-                          child: Icon(
-                            _getTypeIcon(query.type),
-                            color: Colors.white,
-                          ),
-                        ),
-                        title: Text(query.title),
-                        subtitle: Text(
-                          DateFormat('MMM dd, yyyy').format(query.createdAt),
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '₹${query.amount.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _getTypeColor(query.type),
-                              ),
-                            ),
-                            Text(
-                              query.type,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        query.type,
+                        style: const TextStyle(
+                          color: AppTheme.darkTextSecondary,
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDashboardCard(
-    String title,
-    double amount,
-    Color color,
-    IconData icon,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+                      Text(
+                        'Deleted on ${DateFormat('MMM dd, yyyy').format(query.createdAt)}',
+                        style: const TextStyle(
+                          color: AppTheme.darkTextSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '₹${query.amount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _getTypeColor(query.type),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.restore, color: AppTheme.primary),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: AppTheme.darkCard,
+                              title: const Text(
+                                'Restore Transaction',
+                                style: TextStyle(color: AppTheme.darkTextPrimary),
+                              ),
+                              content: const Text(
+                                'Are you sure you want to restore this transaction?',
+                                style: TextStyle(color: AppTheme.darkTextSecondary),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    queryProvider.restoreQuery(query);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text(
+                                    'Restore',
+                                    style: TextStyle(color: AppTheme.primary),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_forever, color: AppTheme.error),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: AppTheme.darkCard,
+                              title: const Text(
+                                'Permanently Delete',
+                                style: TextStyle(color: AppTheme.darkTextPrimary),
+                              ),
+                              content: const Text(
+                                'Are you sure you want to permanently delete this transaction? This action cannot be undone.',
+                                style: TextStyle(color: AppTheme.darkTextSecondary),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    queryProvider.permanentlyDeleteQuery(query);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text(
+                                    'Delete Forever',
+                                    style: TextStyle(color: AppTheme.error),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '₹${amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                color: color,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -191,13 +172,13 @@ class HistoryScreen extends StatelessWidget {
   Color _getTypeColor(String type) {
     switch (type) {
       case 'Expense':
-        return Colors.red;
+        return AppTheme.expenseColor;
       case 'Lent Money':
-        return Colors.green;
+        return AppTheme.lentColor;
       case 'Borrowed Money':
-        return Colors.orange;
+        return AppTheme.borrowedColor;
       default:
-        return Colors.blue;
+        return AppTheme.primary;
     }
   }
 
